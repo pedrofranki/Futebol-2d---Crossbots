@@ -63,6 +63,8 @@
 #include <rcsc/player/intercept_table.h>
 #include <rcsc/player/world_model.h>
 
+#include <rcsc/geom/voronoi_diagram.h>
+
 #include <rcsc/common/logger.h>
 #include <rcsc/common/server_param.h>
 #include <rcsc/param/cmd_line_parser.h>
@@ -89,6 +91,27 @@ const std::string Strategy::SETPLAY_OPP_FORMATION_CONF = "setplay-opp-formation.
 const std::string Strategy::SETPLAY_OUR_FORMATION_CONF = "setplay-our-formation.conf";
 const std::string Strategy::INDIRECT_FREEKICK_OPP_FORMATION_CONF = "indirect-freekick-opp-formation.conf";
 const std::string Strategy::INDIRECT_FREEKICK_OUR_FORMATION_CONF = "indirect-freekick-our-formation.conf";
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+namespace {
+struct MyCompare {
+
+    const Vector2D pos_;
+
+    MyCompare( const Vector2D & pos )
+        : pos_( pos )
+      { }
+
+    bool operator()( const Vector2D & lhs,
+                     const Vector2D & rhs ) const
+      {
+          return (lhs - pos_).length() < (rhs - pos_).length();
+      }
+};
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -663,6 +686,52 @@ Strategy::updatePosition( const WorldModel & wm )
     M_positions.clear();
     f->getPositions( ball_pos, M_positions );
 
+// G2d: various states
+    bool indFK = false;
+    if ( ( wm.gameMode().type() == GameMode::BackPass_
+           && wm.gameMode().side() == wm.theirSide() )
+         || ( wm.gameMode().type() == GameMode::IndFreeKick_
+              && wm.gameMode().side() == wm.ourSide() ) 
+         || ( wm.gameMode().type() == GameMode::FoulCharge_
+              && wm.gameMode().side() == wm.theirSide() )
+         || ( wm.gameMode().type() == GameMode::FoulPush_
+              && wm.gameMode().side() == wm.theirSide() )
+        )
+        indFK = true;
+
+    bool dirFK = false;
+    if ( 
+          ( wm.gameMode().type() == GameMode::FreeKick_
+              && wm.gameMode().side() == wm.ourSide() ) 
+         || ( wm.gameMode().type() == GameMode::FoulCharge_
+              && wm.gameMode().side() == wm.theirSide() )
+         || ( wm.gameMode().type() == GameMode::FoulPush_
+              && wm.gameMode().side() == wm.theirSide() )
+        )
+        dirFK = true;
+
+    bool cornerK = false;
+    if ( 
+          ( wm.gameMode().type() == GameMode::CornerKick_
+              && wm.gameMode().side() == wm.ourSide() ) 
+        )
+        cornerK = true;
+
+    bool kickin = false;
+    if ( 
+          ( wm.gameMode().type() == GameMode::KickIn_
+              && wm.gameMode().side() == wm.ourSide() ) 
+        )
+        kickin = true;
+
+	bool heliosbase = false;
+	bool helios2018 = false;
+	if (wm.opponentTeamName().find("HELIOS_base") != std::string::npos)
+		heliosbase = true;
+	else if (wm.opponentTeamName().find("HELIOS2018") != std::string::npos)
+		helios2018 = true;
+
+
     if ( ServerParam::i().useOffside() )
     {
         double max_x = wm.offsideLineX();
@@ -684,8 +753,279 @@ Strategy::updatePosition( const WorldModel & wm )
             max_x -= 1.0;
         }
 
+// G2d: Voronoi diagram
+			bool newvel = false;
+
+                        VoronoiDiagram vd;
+                        const ServerParam & SP = ServerParam::i();
+
+                        std::vector<Vector2D> vd_cont;
+                        std::vector<Vector2D> NOL_cont;  // Near Offside Line
+                        std::vector<Vector2D> NOL_tmp;  // Near Offside Line tmp
+
+                        std::vector<Vector2D> OffsideSegm_cont;
+                        std::vector<Vector2D> OffsideSegm_tmpcont;
+
+                        Vector2D y1( wm.offsideLineX(), -34.0);
+                        Vector2D y2( wm.offsideLineX(), 34.0);
+
+                        if (wm.ball().pos().x > 25.0)
+                        {
+                                if (wm.ball().pos().y < 0.0)
+                                        y2.y = 20.0;
+                                if (wm.ball().pos().y > 0.0)
+                                        y1.y = -20.0;
+                        }
+
+                        if (wm.ball().pos().x > 36.0)
+                        {
+                                if (wm.ball().pos().y < 0.0)
+                                        y2.y = 8.0;
+                                if (wm.ball().pos().y > 0.0)
+                                        y1.y = -8.0;
+                        }
+
+                        if (wm.ball().pos().x > 49.0)
+                        {
+                                y1.x = y1.x - 4.0;
+                                y2.x = y2.x - 4.0;
+                        }
+
+                        for ( PlayerPtrCont::const_iterator o = wm.opponentsFromSelf().begin();
+                                o != wm.opponentsFromSelf().end();
+                                ++o )
+                        {
+                                if (newvel)
+                                           vd.addPoint((*o)->pos() + (*o)->vel());
+                                else
+                                           vd.addPoint((*o)->pos());
+                        }
+
+                        if (y1.x < 37.0)
+                        {
+                                   vd.addPoint(y1);
+                                   vd.addPoint(y2);
+                        }
+
+                                vd.compute();
+
+
+                        Line2D offsideLine (y1, y2);
+
+                            for ( VoronoiDiagram::Segment2DCont::const_iterator p = vd.segments().begin(),
+                                      end = vd.segments().end();
+                                          p != end;
+                                          ++p )
+                            {
+                                Vector2D si = (*p).intersection( offsideLine );
+                                if (si.isValid() && fabs(si.y) < 34.0 && fabs(si.x) < 52.5)
+                                {
+                                        OffsideSegm_tmpcont.push_back(si);
+
+                                }
+                            }
+
+                            std::sort( OffsideSegm_tmpcont.begin(), OffsideSegm_tmpcont.end(), MyCompare( wm.ball().pos() ) );
+
+                            double prevY = -1000.0;
+
+                                for ( std::vector<Vector2D>::iterator p = OffsideSegm_tmpcont.begin(),
+                                      end = OffsideSegm_tmpcont.end();
+                                          p != end;
+                                          ++p )
+                                {
+                                    if ( p == OffsideSegm_tmpcont.begin() )
+                                    {
+                                        OffsideSegm_cont.push_back((*p));
+                                        prevY = (*p).y;
+                                        continue;
+                                    }
+
+                                    if ( fabs ( (*p).y - prevY ) > 2.0  )
+                                    {
+                                        prevY = (*p).y;
+                                        OffsideSegm_cont.push_back((*p));
+                                    }
+                                }
+
+
+                            int n_points = 0;
+
+                            for ( VoronoiDiagram::Vector2DCont::const_iterator p = vd.vertices().begin(),
+                                      end = vd.vertices().end();
+                                          p != end;
+                                          ++p )
+                            {
+                                if ( (*p).x < wm.offsideLineX() - 5.0  && (*p).x > 0.0 )
+                                {
+                                        vd_cont.push_back((*p));
+
+                                }
+                            }
+
+// end of Voronoi
+
+// G2d: assign players to Voronoi points
+
+                            Vector2D rank (y1.x, -34.0);
+
+                            Vector2D first_pt (-100.0, -100.0);
+                            Vector2D mid_pt (-100.0, -100.0);
+                            Vector2D third_pt (-100.0, -100.0);
+
+                            if (wm.ball().pos().y > 0.0)
+                                rank.y = 34.0;
+
+                            std::sort( OffsideSegm_cont.begin(), OffsideSegm_cont.end(), MyCompare( rank ) );
+
+                            int shift = 0;
+
+                            if (OffsideSegm_cont.size() > 4)
+                                shift = 1;
+
+                            if (OffsideSegm_cont.size() > 0)
+                                first_pt = OffsideSegm_cont[0];
+
+                            if (OffsideSegm_cont.size() > 1)
+                                third_pt = OffsideSegm_cont[OffsideSegm_cont.size() - 1];
+
+                            if (OffsideSegm_cont.size() > 2)
+                                mid_pt = OffsideSegm_cont[2];
+
+
+                                int first_unum = -1;
+                                int sec_unum = -1;
+                                int third_unum = -1;
+
+                            if (wm.ball().pos().y <= 0.0)
+                            {
+                                double tmp = 100.0;
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y < tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                first_unum = ch;
+                                        }
+                                }
+
+                                tmp = 100.0;
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (ch == first_unum)
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y < tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                sec_unum = ch;
+                                        }
+                                }
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if (ch == first_unum || ch == sec_unum)
+                                                continue;
+
+                                        if (first_unum > 0 && sec_unum > 0)
+                                                third_unum = ch;
+                                }
+                            }
+
+                            if (wm.ball().pos().y > 0.0)
+                            {
+                                double tmp = -100.0;
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y > tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                first_unum = ch;
+                                        }
+                                }
+
+                                tmp = -100.0;
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if ( wm.ourPlayer(ch) == NULL ) 
+                                                continue;
+
+                                        if (ch == first_unum)
+                                                continue;
+
+                                        if (wm.ourPlayer(ch)->pos().y > tmp)
+                                        {
+                                                tmp = wm.ourPlayer(ch)->pos().y;
+                                                sec_unum = ch;
+                                        }
+                                }
+
+                                for ( int ch = 9; ch <= 11; ch++ )
+                                {
+                                        if (ch == first_unum || ch == sec_unum)
+                                                continue;
+
+                                        if (first_unum > 0 && sec_unum > 0)
+                                                third_unum = ch;
+                                }
+
+                            }
+
+                        bool first = false;
+                        bool sec = false;
+                        bool third = false;
+
+			double voron_depth = 42.0;
+			if (helios2018)
+				voron_depth = 36.0;
+			if (heliosbase)
+				voron_depth = 0.2;
+
+                        if ( wm.gameMode().type() == GameMode::PlayOn && wm.ball().pos().x > voron_depth)
+                        {
+                            if (first_pt.x > -1.0 && first_unum > 0)
+                            {
+                                first = true;
+                                M_positions[first_unum-1] = first_pt;
+                            }
+                            if (mid_pt.x > -1.0  && sec_unum > 0)
+                            {
+                                sec = true;
+                                M_positions[sec_unum-1] = mid_pt;
+                            }
+                            if (third_pt.x > -1.0 && third_unum > 0)
+                            {
+                                third = true;
+                                M_positions[third_unum-1] = third_pt;
+                            }
+                        }
+// end of assignment
+
         for ( int unum = 1; unum <= 11; ++unum )
         {
+
+// G2d: skip assigned players
+
+            if ( unum == first_unum && first )
+                continue;
+
+            if ( unum == sec_unum && sec )
+                continue;
+
+            if ( unum == third_unum && third )
+                continue;
+
             if ( M_positions[unum-1].x > max_x )
             {
                 dlog.addText( Logger::TEAM,
