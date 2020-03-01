@@ -383,19 +383,15 @@ sample_player-strategy.o: strategy.cpp /usr/include/stdc-predef.h \
  /usr/include/boost/scoped_ptr.hpp \
  /usr/include/boost/smart_ptr/scoped_ptr.hpp \
  /usr/local/include/rcsc/game_mode.h \
- /usr/local/include/rcsc/geom/voronoi_diagram.h \
- /usr/local/include/rcsc/geom/voronoi_diagram_original.h \
- /usr/local/include/rcsc/geom/segment_2d.h \
- /usr/local/include/rcsc/geom/ray_2d.h /usr/include/c++/7/set \
- /usr/include/c++/7/bits/stl_set.h /usr/include/c++/7/bits/stl_multiset.h \
- /usr/local/include/rcsc/geom/voronoi_diagram_triangle.h \
  /usr/local/include/rcsc/common/logger.h \
  /usr/local/include/rcsc/geom/circle_2d.h \
  /usr/local/include/rcsc/geom/sector_2d.h \
  /usr/local/include/rcsc/geom/triangle_2d.h \
+ /usr/local/include/rcsc/geom/segment_2d.h \
  /usr/local/include/rcsc/common/server_param.h \
  /usr/local/include/rcsc/param/cmd_line_parser.h \
- /usr/local/include/rcsc/param/param_parser.h \
+ /usr/local/include/rcsc/param/param_parser.h /usr/include/c++/7/set \
+ /usr/include/c++/7/bits/stl_set.h /usr/include/c++/7/bits/stl_multiset.h \
  /usr/local/include/rcsc/param/param_map.h \
  /usr/include/boost/lexical_cast.hpp \
  /usr/include/boost/range/iterator_range_core.hpp \
@@ -1824,22 +1820,6 @@ role_keepaway_taker.h:
 
 /usr/local/include/rcsc/game_mode.h:
 
-/usr/local/include/rcsc/geom/voronoi_diagram.h:
-
-/usr/local/include/rcsc/geom/voronoi_diagram_original.h:
-
-/usr/local/include/rcsc/geom/segment_2d.h:
-
-/usr/local/include/rcsc/geom/ray_2d.h:
-
-/usr/include/c++/7/set:
-
-/usr/include/c++/7/bits/stl_set.h:
-
-/usr/include/c++/7/bits/stl_multiset.h:
-
-/usr/local/include/rcsc/geom/voronoi_diagram_triangle.h:
-
 /usr/local/include/rcsc/common/logger.h:
 
 /usr/local/include/rcsc/geom/circle_2d.h:
@@ -1848,11 +1828,19 @@ role_keepaway_taker.h:
 
 /usr/local/include/rcsc/geom/triangle_2d.h:
 
+/usr/local/include/rcsc/geom/segment_2d.h:
+
 /usr/local/include/rcsc/common/server_param.h:
 
 /usr/local/include/rcsc/param/cmd_line_parser.h:
 
 /usr/local/include/rcsc/param/param_parser.h:
+
+/usr/include/c++/7/set:
+
+/usr/include/c++/7/bits/stl_set.h:
+
+/usr/include/c++/7/bits/stl_multiset.h:
 
 /usr/local/include/rcsc/param/param_map.h:
 

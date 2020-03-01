@@ -5,9 +5,6 @@ echo " HELIOS base"
 echo " Created by Hidehisa Akiyama and Hiroki Shimora"
 echo " Copyright 2000-2007.  Hidehisa Akiyama"
 echo " Copyright 2007-2012.  Hidehisa Akiyama and Hiroki Shimora"
-echo " "
-echo " Gliders2d"
-echo " Copyright 2018-2019.  Mikhail Prokopenko and Peter Wang"
 echo " All rights reserved."
 echo "******************************************************************"
 
@@ -26,7 +23,7 @@ DIR=`dirname $0`
 
 player="${DIR}/sample_player"
 coach="${DIR}/sample_coach"
-teamname="Gliders2d"
+teamname="HELIOS_base"
 host="localhost"
 port=6000
 coach_port=""
