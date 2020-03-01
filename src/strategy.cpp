@@ -726,10 +726,13 @@ Strategy::updatePosition( const WorldModel & wm )
 
 	bool heliosbase = false;
 	bool helios2018 = false;
+	bool mt = false;
 	if (wm.opponentTeamName().find("HELIOS_base") != std::string::npos)
 		heliosbase = true;
 	else if (wm.opponentTeamName().find("HELIOS2018") != std::string::npos)
 		helios2018 = true;
+	else if (wm.opponentTeamName().find("MT2018") != std::string::npos)
+		mt = true;
 
 
     if ( ServerParam::i().useOffside() )
@@ -1034,8 +1037,63 @@ Strategy::updatePosition( const WorldModel & wm )
                               M_positions[unum-1].x, max_x );
                 M_positions[unum-1].x = max_x;
             }
+
         }
     }
+
+
+    int self_min = wm.interceptTable()->selfReachCycle();
+    int mate_min = wm.interceptTable()->teammateReachCycle();
+    int opp_min = wm.interceptTable()->opponentReachCycle();
+
+    const int our_min = std::min(self_min, mate_min);
+
+// G2d : wing tactic
+        double wing_x = -15.0;
+        double wing_y = 7.0;
+        double wing_depth = 5.0;
+        double wing_limit = 39.0;
+
+	if (mt || helios2018)
+	{
+		wing_depth = 10.0;
+		wing_y = 17.0;
+	}
+
+        if (our_min < opp_min)
+        if (wm.ball().pos().x > wing_x)
+        if (wm.ball().pos().x < wing_limit)
+        if (fabs(wm.ball().pos().y) > wing_y)
+        if (!indFK && !dirFK && !cornerK && !kickin)
+        {
+		M_positions[9-1].x = wm.offsideLineX() + wm.ball().vel().x; 
+		M_positions[10-1].x = wm.offsideLineX() + wm.ball().vel().x; 
+		M_positions[11-1].x = wm.offsideLineX() + wm.ball().vel().x; 
+
+		if (wm.ball().pos().y > 0)
+		{
+			M_positions[9-1].y = 15.0; 
+			M_positions[11-1].y = 22.5; 
+			M_positions[10-1].y = 30.0; 
+		}
+		else
+		{
+			M_positions[9-1].y = -30.0; 
+			M_positions[11-1].y = -22.5; 
+			M_positions[10-1].y = -15.0; 
+		}
+
+		double midX = wm.offsideLineX() - wing_depth;
+
+		M_positions[6-1].x = midX; 
+		M_positions[7-1].x = midX; 
+		M_positions[8-1].x = midX; 
+
+		M_positions[7-1].y = M_positions[9-1].y; 
+		M_positions[6-1].y = M_positions[11-1].y; 
+		M_positions[8-1].y = M_positions[10-1].y; 
+
+	}
 
     M_position_types.clear();
     for ( int unum = 1; unum <= 11; ++unum )

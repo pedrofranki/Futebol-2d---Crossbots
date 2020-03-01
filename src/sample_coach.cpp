@@ -3,6 +3,9 @@
 /*
  *Copyright:
 
+ Gliders2d
+ Modified by Mikhail Prokopenko, Peter Wang
+
  Copyright (C) Hidehisa AKIYAMA
 
  This code is free software; you can redistribute it and/or modify
@@ -341,23 +344,60 @@ SampleCoach::doFirstSubstitute()
     std::vector< int > ordered_unum;
     ordered_unum.reserve( 11 );
 
-#if 0
-    // side back has priority
+// G2d: re-ordering heterogeneous types
+    bool heliosbase = false;
+    bool helios2018 = false;
+    bool mt = false;
+    if (world().theirTeamName().find("HELIOS_base") != std::string::npos)
+            heliosbase = true;
+    else if (world().theirTeamName().find("HELIOS2018") != std::string::npos)
+            helios2018 = true;
+    else if (world().theirTeamName().find("MT2018") != std::string::npos)
+            mt = true;
+
+    if (helios2018)
+    {
+	    ordered_unum.push_back( 5 );  // side back
+	    ordered_unum.push_back( 4 );  // side back
+	    ordered_unum.push_back( 2 );  // center back
+	    ordered_unum.push_back( 3 );  // center back
+	    ordered_unum.push_back( 7 );  // defensive half
+	    ordered_unum.push_back( 6 );  // center half
+	    ordered_unum.push_back( 8 );  // defensive half
+	    ordered_unum.push_back( 10 ); // right forward
+	    ordered_unum.push_back( 11 ); // center forward
+	    ordered_unum.push_back( 9 );  // left half
+    }
+    else if (mt)
+    {
+	    ordered_unum.push_back( 11 ); // center forward
+	    ordered_unum.push_back( 2 );  // center back
+	    ordered_unum.push_back( 3 );  // center back
+	    ordered_unum.push_back( 4 );  // side back
+	    ordered_unum.push_back( 5 );  // side back
+	    ordered_unum.push_back( 10 ); // right forward
+	    ordered_unum.push_back( 9 );  // left half
+	    ordered_unum.push_back( 6 );  // center half
+	    ordered_unum.push_back( 7 );  // defensive half
+	    ordered_unum.push_back( 8 );  // defensive half
+    }
+    else
+    {
+	    ordered_unum.push_back( 10 ); // right forward
+	    ordered_unum.push_back( 9 );  // left half
+	    ordered_unum.push_back( 2 );  // center back
+	    ordered_unum.push_back( 3 );  // center back
+	    ordered_unum.push_back( 4 );  // side back
+	    ordered_unum.push_back( 5 );  // side back
+	    ordered_unum.push_back( 11 ); // center forward
+	    ordered_unum.push_back( 6 );  // center half
+	    ordered_unum.push_back( 7 );  // defensive half
+	    ordered_unum.push_back( 8 );  // defensive half
+    }
+/*
     ordered_unum.push_back( 11 ); // center forward
     ordered_unum.push_back( 2 );  // center back
     ordered_unum.push_back( 3 );  // center back
-    ordered_unum.push_back( 4 );  // side back
-    ordered_unum.push_back( 5 );  // side back
-    ordered_unum.push_back( 10 ); // side half
-    ordered_unum.push_back( 9 );  // side half
-    ordered_unum.push_back( 6 );  // center half
-    ordered_unum.push_back( 7 );  // defensive half
-    ordered_unum.push_back( 8 );  // defensive half
-#else
-    // wing player has priority
-    ordered_unum.push_back( 11 ); // center forward
-    ordered_unum.push_back( 2 );  // center back
-    ordered_unum.push_back( 3 );  // center back
     ordered_unum.push_back( 10 ); // side half
     ordered_unum.push_back( 9 );  // side half
     ordered_unum.push_back( 6 );  // center half
@@ -365,7 +405,7 @@ SampleCoach::doFirstSubstitute()
     ordered_unum.push_back( 5 );  // side back
     ordered_unum.push_back( 7 );  // defensive half
     ordered_unum.push_back( 8 );  // defensive half
-#endif
+*/
 
 
     //

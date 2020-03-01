@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 PLAYERSOURCES = \
+	neck_for_mark.cpp \
 	bhv_basic_move.cpp \
 	bhv_basic_offensive_kick.cpp \
 	bhv_basic_tackle.cpp \
@@ -41,9 +42,11 @@ PLAYERSOURCES = \
 	sample_field_evaluator.cpp \
 	sample_player.cpp \
 	strategy.cpp \
+	GField.cpp \
 	main_player.cpp
 
 PLAYERHEADERS = \
+	neck_for_mark.h \
 	bhv_basic_move.h \
 	bhv_basic_offensive_kick.h \
 	bhv_basic_tackle.h \
@@ -84,6 +87,7 @@ PLAYERHEADERS = \
 	keepaway_communication.h \
 	sample_field_evaluator.h \
 	sample_player.h \
+	GField.cpp \
 	strategy.h
 
 CHAINACTIONSOURCES = \

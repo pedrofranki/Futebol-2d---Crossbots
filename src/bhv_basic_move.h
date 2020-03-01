@@ -20,6 +20,16 @@
  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
  *EndCopyright:
+
+   Z----------------------------------Z
+   |    Fragments of the                              |
+   |    file Created By: Amir Tavafi  |
+   |                                  |
+   |    Date Created:    2009/11/30,  |
+   |                     1388/08/09   |
+   |                                  |
+   Z----------------------------------Z
+
  */
 
 /////////////////////////////////////////////////////////////////////
@@ -29,6 +39,14 @@
 
 #include <rcsc/geom/vector_2d.h>
 #include <rcsc/player/soccer_action.h>
+#include <rcsc/geom/vector_2d.h>
+
+#include <vector>
+
+namespace rcsc {
+class WorldModel;
+}
+
 
 class Bhv_BasicMove
     : public rcsc::SoccerBehavior {
@@ -41,5 +59,26 @@ public:
 private:
     double getDashPower( const rcsc::PlayerAgent * agent );
 };
+
+
+
+class Bhv_MarlikBlock
+    : public rcsc::SoccerBehavior {
+private:
+
+public:
+
+  static bool isInBlockPoint;
+  static int timeAtBlockPoint;
+  static rcsc::Vector2D opp_static_pos;
+
+    bool execute( rcsc::PlayerAgent * agent );
+
+private:
+    bool doInterceptBall2011( rcsc::PlayerAgent * agent );
+    bool doBlockMove( rcsc::PlayerAgent * agent );
+    rcsc::Vector2D getBlockPoint( rcsc::PlayerAgent * agent );
+};
+
 
 #endif

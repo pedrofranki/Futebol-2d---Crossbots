@@ -432,11 +432,24 @@ ActionChainGraph::calculateResultBestFirstSearch( const WorldModel & wm,
                                   ( current_state.ball().pos(), current_evaluation ) );
 #endif
     M_result = empty_path;
-    M_best_evaluation = current_evaluation;
+
+        bool heliosbase = false;
+        bool helios2018 = false;
+        if (wm.opponentTeamName().find("HELIOS_base") != std::string::npos)
+            heliosbase = true;
+        else if (wm.opponentTeamName().find("HELIOS2018") != std::string::npos)
+            helios2018 = true;
+
+// G2d : back_action
+    double back_line = -27.0;
+    if (helios2018)
+	 back_line = -36.5;
+
+    if (wm.ball().pos().x < back_line)
+	    M_best_evaluation = current_evaluation;
 
     queue.push( std::pair< std::vector< ActionStatePair >, double >
                 ( empty_path, current_evaluation ) );
-
 
     //
     // main loop
