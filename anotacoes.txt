@@ -1,0 +1,3 @@
+alteração de formações pasta formations-dt
+
+Vector2D biblioteca para calcular distancias entre pontos, bola é uma instacia dessa classe
